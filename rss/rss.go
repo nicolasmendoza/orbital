@@ -47,7 +47,7 @@ type Document struct {
 	Done    bool
 }
 
-func getDocument(url string, checkCache bool) error {
+func getDocument(url string, checkCache bool) (error) {
 	body, err := readBody(url, checkCache)
 	if err != nil {
 		log.Println(err.Error())
@@ -57,26 +57,28 @@ func getDocument(url string, checkCache bool) error {
 
 	docXML := parserXML(body)
 	if docXML != nil {
-		//Iterating items in document.
-		for _, value := range docXML.ItemList {
-
-			document := new(Document)
-			document.Title = value.Link
-			document.Link = value.Link
-			document.PubDate = value.PubDate
-			document.Done = false
-
+		//Iterating items in document. (building document)
+		for _, xmlItem := range docXML.ItemList {
+			createDocument(&xmlItem)
 		}
 	}
 
-	println(body)
 	return nil
+}
+
+func createDocument(v *XMLItem) *Document {
+	document := new(Document)
+	document.Title = v.Title
+	document.Link = v.Link
+	document.PubDate = v.PubDate
+	document.Done = false
+	return document
 }
 
 func parserXML(doc []byte) *RSS {
 	//Processing XML
 	var docXML RSS
-	if err := xml.Unmarshal(doc, &docXML); err != nil { // TODO FIXME. STORE THE XML FILE when error ocurred.
+	if err := xml.Unmarshal(doc, &docXML); err != nil { // #TODO #FIXME. STORE THE XML FILE when error ocurred.
 		log.Fatal("Cannot marshall XML (RSS) File...")
 		return nil
 	}

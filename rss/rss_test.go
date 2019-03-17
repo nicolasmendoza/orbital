@@ -42,3 +42,25 @@ func TestParserXMLtoDocument(t *testing.T) {
 		t.Error("Invalid XML version. Error parsing file...")
 	}
 }
+
+func TestCreateDocument(t *testing.T){
+	i := new(XMLItem)  // #TODO, #IMPROVEMENT. Create TDDD
+	i.Link = "https://aserejejadeje.com"
+	i.Description = "Nueva licitación en santa marta"
+	i.Title = "Nueva licitacion"
+	i.PubDate = "None"
+
+	newDoc := createDocument(i)
+
+	if newDoc.Title != i.Title{
+		t.Errorf("Error matching %v VS %v", newDoc.Title, i.Title)
+	}
+
+	if newDoc.Link != i.Link{
+		t.Errorf("Error matching %v VS %v", newDoc.Link, i.Link)
+	}
+
+	if newDoc.Done != false{
+		t.Errorf("Error default values expected is: false, but gets: %v", newDoc.Done)
+	}
+}
