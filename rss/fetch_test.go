@@ -10,31 +10,28 @@ func TestSetCacheHeaders(t *testing.T) {
 	url := "https://fakedomain2.com"
 	fakeReq, _ := http.NewRequest(http.MethodGet, url, nil)
 
-	fakeReq.Header.Set("If-Modified-Since", "Tue, 06 Feb 2018 17:34:11 GMT")
-	fakeReq.Header.Set("If-None-Match", "bfc13a64729c4290ef5b2c2730249c88ca92d82d")
+	fakeReq.Header.Set("Last-Modified", "Sat, 16 Mar 2019 04:50:07 GMT")
+	fakeReq.Header.Set("ETag", "bfc13a64729c4290ef5b2c2730249c88ca92d82d")
 
 	setCacheHeaders(url, fakeReq.Header)
 
 	// Get cache headers
 	cacheHeaders, err := getCacheHeaders(url)
 	if err != nil {
-		t.Fatalf("Error getting cache Headers...")
+		t.Errorf("Error getting cache Headers... %v", err.Error())
 	}
-	if cacheHeaders["If-Modified-Since"] != "Tue, 06 Feb 2018 17:34:11 GMT" {
-		t.Fatalf("Error. If-Modified-Since header doesn't coincide")
-	}
-
-	if cacheHeaders["If-None-Match"] != "bfc13a64729c4290ef5b2c2730249c88ca92d82d" {
-		t.Fatalf("Error. If-None_match header cached doesn't coincide")
+	if cacheHeaders[headerLastModified] != "Sat, 16 Mar 2019 04:50:07 GMT" {
+		t.Error("Error. If-Modified-Since header doesn't coincide")
 	}
 
-	t.Logf("Cache Header. If-None-Match: %v", "bfc13a64729c4290ef5b2c2730249c88ca92d82d")
-	t.Logf("Cache Header. If-Modified-Sice: %v", "Tue, 06 Feb 2018 17:34:11 GMT")
+	if cacheHeaders[headerETag] != "bfc13a64729c4290ef5b2c2730249c88ca92d82d" {
+		t.Error("Error. If-None_match header cached doesn't coincide")
+	}
+
 }
 
 func TestGetCacheHeaders(t *testing.T) {
 	key := "https://fakedomain.com"
-
 	// Unexisting cache...
 	_, err := getCacheHeaders(key)
 
@@ -48,7 +45,7 @@ func TestConditionalGet(t *testing.T){
 	resp, err := conditionalGet(url, true)
 
 	if err != nil{
-		t.Fatalf("Error doing conditional get to: %s. Error: %v", url, err.Error())
+		t.Errorf("Error doing conditional get to: %s. Error: %v", url, err.Error())
 	}
 
 	//getting again...will be 304 not modified

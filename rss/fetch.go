@@ -8,7 +8,10 @@ import (
 	"strings"
 	"time"
 )
-
+const (
+	headerLastModified = "If-Modified-Since"
+	headerETag = "If-None-Match"
+)
 func getCacheHeaders(key string) (map[string]string, error) {
 	it, err := cache.Get(key)
 	if err != nil {
@@ -16,8 +19,8 @@ func getCacheHeaders(key string) (map[string]string, error) {
 	}
 	h := strings.Split(string(it.Value), "|")
 	headers := make(map[string]string)
-	headers["If-None-Match"] = h[0]
-	headers["If-Modified-Since"] = h[1]
+	headers[headerETag] = h[0]
+	headers[headerLastModified] = h[1]
 
 	return headers, nil
 }
@@ -28,7 +31,7 @@ func setCacheHeaders(key string, h http.Header) {
 	// "Tue, 06 Feb 2018 17:34:11 GMT"
 	t, err := time.Parse(time.RFC1123, h.Get("Last-Modified"))
 	if err != nil {
-		log.Fatalf("error parsing If-Modified-Since Header. %v", err.Error())
+		panic(err.Error())
 	}
 
 	// https://goplay.space/#I6F6AV_0F-s
@@ -52,8 +55,8 @@ func conditionalGet(url string, checkCache bool) (*http.Response, error) {
 	if checkCache == true {
 		cacheHeaders, _ := getCacheHeaders(url)
 		if cacheHeaders != nil {
-			req.Header.Set("If-None-Match", cacheHeaders["If-None-Match"])
-			req.Header.Set("If-Modified-Since", cacheHeaders["If-Modified-Since"])
+			req.Header.Set("If-None-Match", cacheHeaders[headerETag])
+			req.Header.Set("If-Modified-Since", cacheHeaders[headerLastModified])
 		}
 	}
 
