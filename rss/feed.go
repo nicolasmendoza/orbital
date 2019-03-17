@@ -127,7 +127,7 @@ var Feeds = []struct {
 func ReadFeeds() {
 	for _, source := range Feeds {
 		if source.Enabled {
-			read(source.Link, true)
+			getDocument(source.Link, true)
 		}
 
 	}
