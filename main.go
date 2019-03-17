@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"orbita/rss"
+	"orbita/heartbeat"
 )
 
 func main() {
-	rss.StartBeat()
+	heartbeat.Start() // Starts hearbeat...
 	http.HandleFunc("/", handleIndex)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
 }
 
 func handleIndex(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Esaaa!!")
+	fmt.Fprint(w, "Esaaa!!")
+	fmt.Println(r)
 }

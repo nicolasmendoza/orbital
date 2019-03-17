@@ -126,7 +126,7 @@ var Feeds = []struct {
 	},
 }
 
-func readFeeds() {
+func ReadFeeds() {
 	for _, source := range Feeds {
 		fmt.Println("Sube la temperatura...", source.Link)
 	}
