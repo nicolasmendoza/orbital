@@ -1,13 +1,11 @@
 package rss
 
-import "fmt"
-
 var Feeds = []struct {
 	Name     string
 	Category string
 	Link     string
 	Kind     string
-	Enable   bool
+	Enabled   bool
 	Load     bool
 }{ // A. Material Vivo Animal y Vegetal
 	{
@@ -128,6 +126,9 @@ var Feeds = []struct {
 
 func ReadFeeds() {
 	for _, source := range Feeds {
-		fmt.Println("Sube la temperatura...", source.Link)
+		if source.Enabled {
+			read(source.Link, true)
+		}
+
 	}
 }

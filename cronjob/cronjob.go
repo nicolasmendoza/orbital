@@ -1,10 +1,10 @@
 /*
 Execute a task continually every X time.
 */
-package heartbeat
+package cronjob
 
 import (
-	"fmt"
+	"log"
 	"orbita/rss"
 	"time"
 )
@@ -19,7 +19,7 @@ func Start() {
 	go func() {
 		for t := range ticker.C {
 			rss.ReadFeeds() // Reading Feeds... Here we go!! :-)
-			fmt.Println("Hearbeat -->", t)
+			log.Printf("Beat execution...%v", t)
 		}
 	}()
 

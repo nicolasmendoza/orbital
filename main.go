@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"orbita/heartbeat"
+	"orbita/cronjob"
 )
 
 func main() {
-	heartbeat.Start() // Starts hearbeat...
+	cronjob.Start() // Starts hearbeat...
 	http.HandleFunc("/", handleIndex)
 	log.Fatal(http.ListenAndServe(":8080", nil))
 
