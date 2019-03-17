@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"log"
+	db2 "orbita/db"
 )
 
 // http://www.w3schools.com/rss/rss_syntax.asp
@@ -47,32 +48,46 @@ type Document struct {
 	Done    bool
 }
 
-func getDocument(url string, checkCache bool) (error) {
-	body, err := readBody(url, checkCache)
-	if err != nil {
-		log.Println(err.Error())
-		return err
-
+// Store document into Database...
+func (d *Document) Insert(){
+	db := db2.Get()
+	query := "INSERT INTO documents VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+	stmInsert, err := db.Prepare(query)
+	if err!=nil{
+		log.Panicf("Error preparing Query %v", err.Error())
 	}
-
-	docXML := parserXML(body)
-	if docXML != nil {
-		//Iterating items in document. (building document)
-		for _, xmlItem := range docXML.ItemList {
-			createDocument(&xmlItem)
-		}
+	defer stmInsert.Close() // DANGER!!!!
+	if _, err := stmInsert.Exec(nil, d.Title, d.Description, d.PubDate, d.Done); err!=nil{
+		log.Panicf("Error inserting document in database %v", err.Error())
 	}
-
-	return nil
 }
 
-func createDocument(v *XMLItem) *Document {
+func newDocument(v *XMLItem) *Document {
 	document := new(Document)
 	document.Title = v.Title
 	document.Link = v.Link
 	document.PubDate = v.PubDate
 	document.Done = false
 	return document
+}
+
+func getDocument(url string, checkCache bool) (error) {
+	body, err := readBody(url, checkCache)
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	docXML := parserXML(body)
+	if docXML != nil {
+		//Iterating items in document. (building document)
+		for _, xmlItem := range docXML.ItemList {
+			doc := newDocument(&xmlItem)
+			doc.Insert()
+		}
+	}
+
+	return nil
 }
 
 func parserXML(doc []byte) *RSS {

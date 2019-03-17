@@ -50,7 +50,7 @@ func TestCreateDocument(t *testing.T){
 	i.Title = "Nueva licitacion"
 	i.PubDate = "None"
 
-	newDoc := createDocument(i)
+	newDoc := newDocument(i)
 
 	if newDoc.Title != i.Title{
 		t.Errorf("Error matching %v VS %v", newDoc.Title, i.Title)
@@ -63,4 +63,5 @@ func TestCreateDocument(t *testing.T){
 	if newDoc.Done != false{
 		t.Errorf("Error default values expected is: false, but gets: %v", newDoc.Done)
 	}
+	newDoc.save()
 }
