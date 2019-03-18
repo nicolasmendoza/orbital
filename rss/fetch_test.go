@@ -42,18 +42,24 @@ func TestGetCacheHeaders(t *testing.T) {
 
 func TestConditionalGet(t *testing.T){
 	url := "https://www.contratos.gov.co/Archivos/RSSFolder/RSSFiles/rssFeed-27000000.xml"
-	resp, err := conditionalGet(url, true)
+	resp, modified, err := conditionalGet(url, false)
 
 	if err != nil{
 		t.Errorf("Error doing conditional get to: %s. Error: %v", url, err.Error())
 	}
+	if modified != true{
+		t.Errorf("Expected Modified: true but we received: %v", modified)
+	}
 
 	//getting again...will be 304 not modified
-	resp, _= conditionalGet(url, true)
+	resp, modified, _= conditionalGet(url, true)
 	if resp.StatusCode != http.StatusNotModified{
 		t.Logf("getConditional is not caching the Headers. Response: %v, url: %s", resp.StatusCode, url)
 	}
 
+	if modified != false{
+		t.Logf("Expected False. Received %v", modified)
+	}
 	t.Logf("Status: %v", resp.Header)
 	t.Logf("Status: %v", resp.StatusCode)
 

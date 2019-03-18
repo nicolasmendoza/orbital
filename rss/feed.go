@@ -1,5 +1,7 @@
 package rss
 
+import "log"
+
 var Feeds = []struct {
 	Name     string
 	Category string
@@ -127,7 +129,10 @@ var Feeds = []struct {
 func ReadFeeds() {
 	for _, source := range Feeds {
 		if source.Enabled {
-			getDocument(source.Link, true)
+			err:= getDocument(source.Link, true)
+			if err!=nil{
+				log.Println("Azuquita pa' el café")
+			}
 		}
 
 	}

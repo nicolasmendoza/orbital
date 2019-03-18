@@ -17,3 +17,8 @@ func Set(key string, value string)(err error){
 	item := &memcache.Item{Key: key, Value: []byte(value)}
 	return mc.Set(item)
 }
+
+// Reset all memcached memory. WARNING!!!!
+func FlushAll(){
+	mc.FlushAll()
+}

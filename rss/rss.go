@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	db2 "orbita/db"
+	"time"
 )
 
 // http://www.w3schools.com/rss/rss_syntax.asp
@@ -49,15 +50,17 @@ type Document struct {
 }
 
 // Store document into Database...
-func (d *Document) Insert(){
+func (d *Document) Insert() {
 	db := db2.Get()
-	query := "INSERT INTO documents VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
+	query := "INSERT INTO curiosity_documents VALUES(?, ?, ?, ?, ?, ?, ?, ?)"
 	stmInsert, err := db.Prepare(query)
-	if err!=nil{
+	if err != nil {
 		log.Panicf("Error preparing Query %v", err.Error())
 	}
 	defer stmInsert.Close() // DANGER!!!!
-	if _, err := stmInsert.Exec(nil, d.Title, d.Description, d.PubDate, d.Done); err!=nil{
+	var datetime = time.Now()
+	datetime.Format(time.RFC3339)
+	if _, err := stmInsert.Exec(nil, datetime, "category", d.PubDate, d.Title, d.Link, d.Description, d.Done); err != nil {
 		log.Panicf("Error inserting document in database %v", err.Error())
 	}
 }
@@ -71,50 +74,56 @@ func newDocument(v *XMLItem) *Document {
 	return document
 }
 
-func getDocument(url string, checkCache bool) (error) {
-	body, err := readBody(url, checkCache)
+func getDocument(url string, checkCache bool) error {
+	body, modified, err := readBody(url, checkCache)
 	if err != nil {
 		log.Println(err.Error())
 		return err
 	}
-
-	docXML := parserXML(body)
-	if docXML != nil {
-		//Iterating items in document. (building document)
-		for _, xmlItem := range docXML.ItemList {
-			doc := newDocument(&xmlItem)
-			doc.Insert()
+	if modified == true {
+		// TODO add Here LOGGER...
+		docXML := parserXML(body)
+		if docXML != nil {
+			//Iterating items in document. (building document)
+			for _, xmlItem := range docXML.ItemList {
+				doc := newDocument(&xmlItem)
+				doc.Insert()
+			}
 		}
-	}
 
+	}
 	return nil
+}
+
+func readBody(url string, checkCache bool) ([]byte, bool, error) {
+	// HTTP GET to the resource, with conditional value.
+	resp, modified, err := conditionalGet(url, checkCache)
+	if err != nil {
+		return nil, false, fmt.Errorf("cannot get URL: %s, %v", url, err.Error())
+	}
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+	// If document not was modified...so we don't need process this file..
+	if modified == false {
+		return nil, false, nil
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, false, fmt.Errorf("error getting reading body for url: %s. Error: %v", url, err.Error())
+	}
+	return body, true, nil
+
 }
 
 func parserXML(doc []byte) *RSS {
 	//Processing XML
 	var docXML RSS
+	log.Println("-->", string(doc))
 	if err := xml.Unmarshal(doc, &docXML); err != nil { // #TODO #FIXME. STORE THE XML FILE when error ocurred.
-		log.Fatal("Cannot marshall XML (RSS) File...")
+		log.Fatalf("Cannot marshall XML (RSS) File...%v", err.Error())
 		return nil
 	}
 
 	return &docXML
-}
-
-func readBody(url string, checkCache bool) ([]byte, error) {
-	// HTTP GET to the resource, with conditional value.
-	resp, err := conditionalGet(url, checkCache)
-	if err != nil {
-		return nil, fmt.Errorf("cannot get URL: %s, %v", url, err.Error())
-	}
-	if resp != nil {
-		defer resp.Body.Close()
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("error getting reading body for url: %s. Error: %v", url, err.Error())
-	}
-	return body, nil
-
 }

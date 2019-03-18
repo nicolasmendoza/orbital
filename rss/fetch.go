@@ -8,10 +8,12 @@ import (
 	"strings"
 	"time"
 )
+
 const (
 	headerLastModified = "If-Modified-Since"
-	headerETag = "If-None-Match"
+	headerETag         = "If-None-Match"
 )
+
 func getCacheHeaders(key string) (map[string]string, error) {
 	it, err := cache.Get(key)
 	if err != nil {
@@ -45,7 +47,7 @@ func setCacheHeaders(key string, h http.Header) {
 	}
 
 }
-func conditionalGet(url string, checkCache bool) (*http.Response, error) {
+func conditionalGet(url string, checkCache bool) (*http.Response, bool, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -66,8 +68,14 @@ func conditionalGet(url string, checkCache bool) (*http.Response, error) {
 		log.Printf("Error doing request to %s, %v", url, err.Error())
 	}
 
+	var modified bool
+
 	if resp.StatusCode == http.StatusOK {
 		setCacheHeaders(url, resp.Header)
+		modified = true
 	}
-	return resp, nil
+	if (resp.StatusCode == http.StatusNotModified) {
+		modified = false
+	}
+	return resp, modified, nil
 }
